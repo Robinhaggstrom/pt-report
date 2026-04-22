@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PT Model Report — Option 1 vs Option 4</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1117;
+    --bg2: #161b27;
+    --bg3: #1e2535;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.14);
+    --text: #f0f2f8;
+    --text2: #8b93a8;
+    --text3: #5a6278;
+    --blue: #3b82f6;
+    --blue-light: #93c5fd;
+    --blue-dim: rgba(59,130,246,0.15);
+    --amber: #f59e0b;
+    --amber-light: #fcd34d;
+    --amber-dim: rgba(245,158,11,0.15);
+    --gray: #6b7280;
+    --green: #10b981;
+    --green-dim: rgba(16,185,129,0.15);
+    --red: #ef4444;
+    --red-dim: rgba(239,68,68,0.1);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0 0 4rem;
+  }
+
+  /* Header */
+  .header {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 2.5rem 3rem 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 300px; height: 300px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+  .header h1 {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+    color: var(--text);
+  }
+  .header .subtitle {
+    font-size: 13px;
+    color: var(--text2);
+    margin-top: 4px;
+  }
+  .header-meta {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 1.5rem;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+    border: 1px solid var(--border2);
+    color: var(--text2);
+    background: var(--bg3);
+  }
+  .pill .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+  }
+
+  /* Layout */
+  .container { max-width: 1100px; margin: 0 auto; padding: 2rem 3rem; }
+  .section { margin-bottom: 3rem; }
+  .section-title {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+  .section-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    font-size: 10px;
+    color: var(--text2);
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  /* Cards */
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+  }
+  .card-sm { padding: 1rem 1.25rem; }
+
+  /* Metric grid */
+  .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 10px; margin-bottom: 1.5rem; }
+  .metric-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+  }
+  .metric-card .m-label { font-size: 11px; color: var(--text3); margin-bottom: 4px; }
+  .metric-card .m-val { font-size: 24px; font-weight: 600; color: var(--text); }
+  .metric-card .m-sub { font-size: 11px; color: var(--text3); margin-top: 3px; }
+
+  /* Tabs */
+  .tab-bar { display: flex; gap: 4px; margin-bottom: 1.25rem; flex-wrap: wrap; }
+  .tab {
+    font-size: 12px; font-weight: 500;
+    padding: 5px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    background: transparent;
+    color: var(--text2);
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+  .tab:hover { background: var(--bg3); color: var(--text); }
+  .tab.active { background: var(--blue-dim); color: var(--blue-light); border-color: rgba(59,130,246,0.3); }
+
+  /* Legend */
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 10px; font-size: 11px; color: var(--text2); }
+  .legend span { display: flex; align-items: center; gap: 5px; }
+  .swatch { width: 10px; height: 10px; border-radius: 2px; display: inline-block; flex-shrink: 0; }
+
+  /* Chart wrapper */
+  .chart-wrap { position: relative; width: 100%; }
+
+  /* Threshold table */
+  .thresh-wrap { overflow-x: auto; }
+  table.thresh {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  table.thresh th {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text3);
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    text-align: center;
+    white-space: nowrap;
+  }
+  table.thresh th:first-child { text-align: left; }
+  table.thresh td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    text-align: center;
+    vertical-align: middle;
+  }
+  table.thresh td:first-child {
+    text-align: left;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--text2);
+    font-weight: 500;
+  }
+  table.thresh tr:last-child td { border-bottom: none; }
+  table.thresh tr:hover td { background: rgba(255,255,255,0.02); }
+  .cell-hit {
+    display: inline-flex; flex-direction: column; align-items: center; gap: 2px;
+    background: rgba(16,185,129,0.12);
+    border: 1px solid rgba(16,185,129,0.25);
+    border-radius: 8px;
+    padding: 5px 12px;
+    min-width: 90px;
+  }
+  .cell-hit .pct { font-size: 14px; font-weight: 600; color: #10b981; }
+  .cell-hit .n { font-size: 10px; color: rgba(16,185,129,0.7); }
+  .cell-close {
+    display: inline-flex; flex-direction: column; align-items: center; gap: 2px;
+    background: rgba(245,158,11,0.1);
+    border: 1px solid rgba(245,158,11,0.2);
+    border-radius: 8px;
+    padding: 5px 12px;
+    min-width: 90px;
+  }
+  .cell-close .pct { font-size: 14px; font-weight: 600; color: #f59e0b; }
+  .cell-close .n { font-size: 10px; color: rgba(245,158,11,0.7); }
+  .cell-miss {
+    display: inline-flex; flex-direction: column; align-items: center; gap: 2px;
+    min-width: 90px;
+  }
+  .cell-miss .pct { font-size: 14px; font-weight: 500; color: var(--text2); }
+  .cell-miss .n { font-size: 10px; color: var(--text3); }
+  .thresh-note { font-size: 11px; color: var(--text3); margin-top: 10px; }
+
+  /* Direction cards */
+  .dir-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1.25rem; }
+  .dir-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.25rem; }
+  .dir-card h4 { font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 10px; letter-spacing: 0.03em; text-transform: uppercase; font-size: 10px; }
+  .dir-row { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 12px; color: var(--text2); }
+  .dir-row:last-child { border-bottom: none; }
+  .dir-badges { display: flex; gap: 5px; flex-wrap: wrap; }
+  .badge { display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+  .badge-g { background: rgba(16,185,129,0.12); color: #10b981; }
+  .badge-r { background: rgba(239,68,68,0.1); color: #f87171; }
+  .badge-n { background: var(--bg2); color: var(--text3); border: 1px solid var(--border); }
+
+  @media (max-width: 640px) {
+    .container { padding: 1.5rem; }
+    .header { padding: 1.5rem; }
+    .dir-grid { grid-template-columns: 1fr; }
+    .metric-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div>
+      <h1>PT Model Report — Option 1 vs Option 4</h1>
+      <div class="subtitle">Position Taking prediction system · Assessment date: 2026-04-10 · Rolling 2-week cycle</div>
+    </div>
+  </div>
+  <div class="header-meta">
+    <span class="pill"><span class="dot" style="background:#3b82f6"></span>Option 1 — PnL-driven (57.5% weight)</span>
+    <span class="pill"><span class="dot" style="background:#f59e0b"></span>Option 4 — ROI-driven (57.5% weight)</span>
+    <span class="pill">n = 1,880 clients</span>
+    <span class="pill">Target: 75% of clients within ±threshold of Current PT</span>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- SECTION 1: Backtest PnL -->
+  <div class="section">
+    <div class="section-title"><span class="section-num">1</span>Suggested PnL vs actual profit — key metrics</div>
+    <div class="metric-grid" style="grid-template-columns:repeat(auto-fit,minmax(170px,1fr))">
+      <div class="metric-card" style="border-color:rgba(255,255,255,0.18)">
+        <div class="m-label">Actual profit (baseline)</div>
+        <div class="m-val">2,980,340</div>
+        <div class="m-sub">Historical result</div>
+      </div>
+      <div class="metric-card">
+        <div class="m-label">O1 Suggested PT</div>
+        <div class="m-val">3,258,074</div>
+        <div class="m-sub" style="color:#10b981">+277,734 vs actual (+9.3%)</div>
+      </div>
+      <div class="metric-card">
+        <div class="m-label">O1 Before Rules</div>
+        <div class="m-val">3,078,271</div>
+        <div class="m-sub" style="color:#10b981">+97,931 vs actual (+3.3%)</div>
+      </div>
+      <div class="metric-card">
+        <div class="m-label">O4 Suggested PT</div>
+        <div class="m-val">3,454,504</div>
+        <div class="m-sub" style="color:#10b981">+474,164 vs actual (+15.9%)</div>
+      </div>
+      <div class="metric-card">
+        <div class="m-label">O4 Before Rules</div>
+        <div class="m-val">3,291,576</div>
+        <div class="m-sub" style="color:#10b981">+311,236 vs actual (+10.4%)</div>
+      </div>
+    </div>
+    <div class="card">
+      <div style="font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:1rem">Suggested PnL comparison — all scenarios</div>
+      <div class="legend">
+        <span><span class="swatch" style="background:#3b82f6"></span>O1 Suggested PT</span>
+        <span><span class="swatch" style="background:#93c5fd"></span>O1 Before Rules</span>
+        <span><span class="swatch" style="background:#f59e0b"></span>O4 Suggested PT</span>
+        <span><span class="swatch" style="background:#fcd34d"></span>O4 Before Rules</span>
+      </div>
+      <div class="chart-wrap" style="height:280px">
+        <canvas id="pnlChart" role="img" aria-label="Bar chart comparing suggested PnL across four scenarios against actual profit baseline">Suggested PnL: O1 Suggested PT 3,258,074 — O1 Before Rules 3,078,271 — O4 Suggested PT 3,454,504 — O4 Before Rules 3,291,576. Actual profit baseline: 2,980,340.</canvas>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:10px;font-size:11px;color:var(--text3)">
+        <svg width="24" height="8"><line x1="0" y1="4" x2="24" y2="4" stroke="#6b7280" stroke-width="1.5" stroke-dasharray="5,3"/></svg>
+        Actual profit baseline: 2,980,340
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 2: Distribution -->
+  <div class="section">
+    <div class="section-title"><span class="section-num">2</span>PT Distribution — per band</div>
+    <div class="card">
+      <div class="tab-bar">
+        <button class="tab active" onclick="showDist('all')">All four</button>
+        <button class="tab" onclick="showDist('suggested')">Suggested PT</button>
+        <button class="tab" onclick="showDist('beforerules')">Before Rules</button>
+        <button class="tab" onclick="showDist('o1')">Option 1 vs Current</button>
+        <button class="tab" onclick="showDist('o4')">Option 4 vs Current</button>
+      </div>
+      <div class="legend">
+        <span><span class="swatch" style="background:#6b7280"></span>Current PT (n=1,873)</span>
+        <span><span class="swatch" style="background:#3b82f6"></span>O1 Suggested PT (n=1,880)</span>
+        <span><span class="swatch" style="background:#93c5fd"></span>O1 Before Rules (n=1,880)</span>
+        <span><span class="swatch" style="background:#f59e0b"></span>O4 Suggested PT (n=1,880)</span>
+        <span><span class="swatch" style="background:#fcd34d"></span>O4 Before Rules (n=1,880)</span>
+      </div>
+      <div class="chart-wrap" style="height:300px">
+        <canvas id="distChart" role="img" aria-label="Bar chart of PT distribution per band"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 3: Threshold table -->
+  <div class="section">
+    <div class="section-title"><span class="section-num">3</span>Accuracy vs Current PT — % of clients within threshold</div>
+    <div class="card">
+      <div class="thresh-wrap">
+        <table class="thresh">
+          <thead>
+            <tr>
+              <th>Threshold</th>
+              <th>Suggested PT<br>Option 1</th>
+              <th>Suggested PT<br>Option 4</th>
+              <th>Before Rules<br>Option 1</th>
+              <th>Before Rules<br>Option 4</th>
+            </tr>
+          </thead>
+          <tbody id="thresh-body"></tbody>
+        </table>
+      </div>
+      <div class="thresh-note">
+        <span style="color:#10b981">■</span> Green = reaches 75% target &nbsp;·&nbsp;
+        <span style="color:#f59e0b">■</span> Amber = within 5pp of target &nbsp;·&nbsp;
+        Base: 1,873 clients with known Current PT
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 4: Direction -->
+  <div class="section">
+    <div class="section-title"><span class="section-num">4</span>Suggested PT vs Current PT — direction per client (n=1,873)</div>
+    <div class="dir-grid">
+      <div class="dir-card">
+        <h4>Option 1</h4>
+        <div class="dir-row">
+          <span>Suggested PT</span>
+          <div class="dir-badges">
+            <span class="badge badge-g">↑ Higher: 250</span>
+            <span class="badge badge-n">= Same: 306</span>
+            <span class="badge badge-r">↓ Lower: 1,317</span>
+          </div>
+        </div>
+        <div class="dir-row">
+          <span>Before Rules</span>
+          <div class="dir-badges">
+            <span class="badge badge-g">↑ Higher: 284</span>
+            <span class="badge badge-n">= Same: 225</span>
+            <span class="badge badge-r">↓ Lower: 1,364</span>
+          </div>
+        </div>
+      </div>
+      <div class="dir-card">
+        <h4>Option 4</h4>
+        <div class="dir-row">
+          <span>Suggested PT</span>
+          <div class="dir-badges">
+            <span class="badge badge-g">↑ Higher: 928</span>
+            <span class="badge badge-n">= Same: 279</span>
+            <span class="badge badge-r">↓ Lower: 666</span>
+          </div>
+        </div>
+        <div class="dir-row">
+          <span>Before Rules</span>
+          <div class="dir-badges">
+            <span class="badge badge-g">↑ Higher: 1,081</span>
+            <span class="badge badge-n">= Same: 215</span>
+            <span class="badge badge-r">↓ Lower: 577</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="padding:1.25rem 1.5rem">
+      <div class="chart-wrap" style="height:230px">
+        <canvas id="dirChart" role="img" aria-label="Bar chart showing direction vs Current PT"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 5: Rules -->
+  <div class="section">
+    <div class="section-title"><span class="section-num">5</span>Rule Triggers</div>
+    <div class="metric-grid">
+      <div class="metric-card">
+        <div class="m-label">O1 — hits 1 rule</div>
+        <div class="m-val">757</div>
+        <div class="m-sub">40.3% of 1,880</div>
+      </div>
+      <div class="metric-card">
+        <div class="m-label">O4 — hits 1 rule</div>
+        <div class="m-val">856</div>
+        <div class="m-sub">45.5% of 1,880</div>
+      </div>
+      <div class="metric-card">
+        <div class="m-label">O1 — hits 2+ rules</div>
+        <div class="m-val">693</div>
+        <div class="m-sub">36.9% of 1,880</div>
+      </div>
+      <div class="metric-card">
+        <div class="m-label">O4 — hits 2+ rules</div>
+        <div class="m-val">555</div>
+        <div class="m-sub">29.5% of 1,880</div>
+      </div>
+      <div class="metric-card">
+        <div class="m-label">O1 — hits 3 rules</div>
+        <div class="m-val">28</div>
+        <div class="m-sub">clients</div>
+      </div>
+      <div class="metric-card">
+        <div class="m-label">O4 — hits 3 rules</div>
+        <div class="m-val">33</div>
+        <div class="m-sub">clients</div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:1rem">
+      <div class="legend">
+        <span><span class="swatch" style="background:#3b82f6"></span>Option 1</span>
+        <span><span class="swatch" style="background:#f59e0b"></span>Option 4</span>
+      </div>
+      <div class="chart-wrap" style="height:200px">
+        <canvas id="rulesChart" role="img" aria-label="Rule triggers per rule for Option 1 and 4"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div style="font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:1rem">Number of rules triggered per client</div>
+      <div class="legend">
+        <span><span class="swatch" style="background:#3b82f6"></span>Option 1</span>
+        <span><span class="swatch" style="background:#f59e0b"></span>Option 4</span>
+      </div>
+      <div class="chart-wrap" style="height:200px">
+        <canvas id="rcChart" role="img" aria-label="Clients per number of rules triggered"></canvas>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+const C='#6b7280', O1='#3b82f6', O1b='#93c5fd', O4='#f59e0b', O4b='#fcd34d';
+
+// PnL chart
+new Chart(document.getElementById('pnlChart'),{
+  type:'bar',
+  data:{
+    labels:['O1 Suggested PT','O1 Before Rules','O4 Suggested PT','O4 Before Rules'],
+    datasets:[{
+      label:'Suggested PnL',
+      data:[3258074,3078271,3454504,3291576],
+      backgroundColor:[O1+'CC',O1b+'AA',O4+'CC',O4b+'AA'],
+      borderRadius:4
+    }]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{
+      legend:{display:false},
+      tooltip:{backgroundColor:'#1e2535',titleColor:'#f0f2f8',bodyColor:'#8b93a8',borderColor:'rgba(255,255,255,0.1)',borderWidth:1,
+        callbacks:{label:c=>` Suggested PnL: ${c.parsed.y.toLocaleString()}`}}
+    },
+    scales:{
+      x:{ticks:{color:'#5a6278',font:{size:10}},grid:{display:false},border:{color:'rgba(255,255,255,0.07)'}},
+      y:{min:2800000,ticks:{color:'#5a6278',font:{size:10},callback:v=>(v/1000000).toFixed(2)+'M'},grid:{color:'rgba(255,255,255,0.05)'},border:{color:'rgba(255,255,255,0.07)'}}
+    }
+  },
+  plugins:[{
+    id:'actualLine',
+    afterDraw(chart){
+      const {ctx,chartArea:{left,right},scales:{y}}=chart;
+      const yPx=y.getPixelForValue(2980340);
+      ctx.save();
+      ctx.setLineDash([6,4]);
+      ctx.strokeStyle='#6b7280';
+      ctx.lineWidth=1.5;
+      ctx.beginPath();
+      ctx.moveTo(left,yPx);
+      ctx.lineTo(right,yPx);
+      ctx.stroke();
+      ctx.restore();
+    }
+  }]
+});
+const bands=['0%','1–10%','11–20%','21–30%','31–40%','41–50%','51–60%','61–70%','71–80%','81–90%'];
+
+Chart.defaults.color = '#8b93a8';
+Chart.defaults.borderColor = 'rgba(255,255,255,0.07)';
+Chart.defaults.font.family = "'DM Sans', sans-serif";
+
+const dd={
+  cur:[96,33,48,119,38,793,87,217,200,242],
+  o1s:[219,24,207,399,198,240,234,126,128,105],
+  o1b:[0,0,116,818,386,97,157,123,109,74],
+  o4s:[232,9,190,39,73,74,253,79,482,449],
+  o4b:[0,56,309,113,71,39,96,141,809,246]
+};
+
+const baseOpts={
+  responsive:true,maintainAspectRatio:false,
+  plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y} clients`},backgroundColor:'#1e2535',titleColor:'#f0f2f8',bodyColor:'#8b93a8',borderColor:'rgba(255,255,255,0.1)',borderWidth:1}},
+  scales:{
+    x:{ticks:{color:'#5a6278',font:{size:10}},grid:{display:false},border:{color:'rgba(255,255,255,0.07)'}},
+    y:{ticks:{color:'#5a6278',font:{size:10}},grid:{color:'rgba(255,255,255,0.05)'},border:{color:'rgba(255,255,255,0.07)'}}
+  }
+};
+
+const cfgs={
+  all:[
+    {label:'Current PT',data:dd.cur,backgroundColor:C+'88',borderRadius:3},
+    {label:'O1 Suggested PT',data:dd.o1s,backgroundColor:O1+'CC',borderRadius:3},
+    {label:'O1 Before Rules',data:dd.o1b,backgroundColor:O1b+'AA',borderRadius:3},
+    {label:'O4 Suggested PT',data:dd.o4s,backgroundColor:O4+'CC',borderRadius:3},
+    {label:'O4 Before Rules',data:dd.o4b,backgroundColor:O4b+'AA',borderRadius:3}
+  ],
+  suggested:[
+    {label:'Current PT',data:dd.cur,backgroundColor:C+'88',borderRadius:3},
+    {label:'O1 Suggested PT',data:dd.o1s,backgroundColor:O1+'CC',borderRadius:3},
+    {label:'O4 Suggested PT',data:dd.o4s,backgroundColor:O4+'CC',borderRadius:3}
+  ],
+  beforerules:[
+    {label:'Current PT',data:dd.cur,backgroundColor:C+'88',borderRadius:3},
+    {label:'O1 Before Rules',data:dd.o1b,backgroundColor:O1b+'AA',borderRadius:3},
+    {label:'O4 Before Rules',data:dd.o4b,backgroundColor:O4b+'AA',borderRadius:3}
+  ],
+  o1:[
+    {label:'Current PT',data:dd.cur,backgroundColor:C+'88',borderRadius:3},
+    {label:'O1 Suggested PT',data:dd.o1s,backgroundColor:O1+'CC',borderRadius:3},
+    {label:'O1 Before Rules',data:dd.o1b,backgroundColor:O1b+'AA',borderRadius:3}
+  ],
+  o4:[
+    {label:'Current PT',data:dd.cur,backgroundColor:C+'88',borderRadius:3},
+    {label:'O4 Suggested PT',data:dd.o4s,backgroundColor:O4+'CC',borderRadius:3},
+    {label:'O4 Before Rules',data:dd.o4b,backgroundColor:O4b+'AA',borderRadius:3}
+  ]
+};
+
+let distChart=new Chart(document.getElementById('distChart'),{type:'bar',data:{labels:bands,datasets:cfgs.all},options:baseOpts});
+
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',function(){
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  this.classList.add('active');
+}));
+function showDist(k){distChart.data.datasets=cfgs[k];distChart.update();}
+
+// Threshold table
+const rows=[
+  {t:'±0.15',o1s:36.5,o4s:38.2,o1b:33.1,o4b:38.7,o1sn:683,o4sn:716,o1bn:620,o4bn:724},
+  {t:'±0.20',o1s:64.7,o4s:48.6,o1b:69.1,o4b:51.6,o1sn:1212,o4sn:910,o1bn:1295,o4bn:967},
+  {t:'±0.25',o1s:68.6,o4s:58.0,o1b:73.8,o4b:60.9,o1sn:1285,o4sn:1086,o1bn:1382,o4bn:1141},
+  {t:'±0.30',o1s:90.0,o4s:72.2,o1b:85.1,o4b:70.5,o1sn:1685,o4sn:1352,o1bn:1593,o4bn:1320}
+];
+
+function cellHtml(pct,n){
+  if(pct>=75) return `<div class="cell-hit"><span class="pct">${pct.toFixed(1)}% ✓</span><span class="n">${n.toLocaleString()} clients</span></div>`;
+  if(pct>=70) return `<div class="cell-close"><span class="pct">${pct.toFixed(1)}%</span><span class="n">${n.toLocaleString()} clients</span></div>`;
+  return `<div class="cell-miss"><span class="pct">${pct.toFixed(1)}%</span><span class="n">${n.toLocaleString()} clients</span></div>`;
+}
+
+const tbody=document.getElementById('thresh-body');
+rows.forEach(r=>{
+  tbody.innerHTML+=`<tr>
+    <td>${r.t}</td>
+    <td>${cellHtml(r.o1s,r.o1sn)}</td>
+    <td>${cellHtml(r.o4s,r.o4sn)}</td>
+    <td>${cellHtml(r.o1b,r.o1bn)}</td>
+    <td>${cellHtml(r.o4b,r.o4bn)}</td>
+  </tr>`;
+});
+
+// Direction chart
+new Chart(document.getElementById('dirChart'),{
+  type:'bar',
+  data:{
+    labels:['O1 Suggested PT','O1 Before Rules','O4 Suggested PT','O4 Before Rules'],
+    datasets:[
+      {label:'Higher than Current PT',data:[250,284,928,1081],backgroundColor:'#10b981BB',borderRadius:3},
+      {label:'Same as Current PT',data:[306,225,279,215],backgroundColor:C+'88',borderRadius:3},
+      {label:'Lower than Current PT',data:[1317,1364,666,577],backgroundColor:'#ef4444BB',borderRadius:3}
+    ]
+  },
+  options:{...baseOpts,plugins:{...baseOpts.plugins,tooltip:{...baseOpts.plugins.tooltip,callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y} clients`}}}}
+});
+
+// Rules chart
+new Chart(document.getElementById('rulesChart'),{
+  type:'bar',
+  data:{
+    labels:['R1 Pattern\n(<3 → PT -20%)','R2 Kill Switch\n(PnL/stake >20 → 0%)','R3 Avg Stake\n(<50 → PT +20%)','R4 Max Drop\n(30% cap)'],
+    datasets:[
+      {label:'Option 1',data:[813,209,829,320],backgroundColor:O1+'CC',borderRadius:3},
+      {label:'Option 4',data:[813,209,829,148],backgroundColor:O4+'CC',borderRadius:3}
+    ]
+  },
+  options:{...baseOpts,scales:{...baseOpts.scales,x:{...baseOpts.scales.x,ticks:{...baseOpts.scales.x.ticks,maxRotation:0}}}}
+});
+
+// Rule count chart
+new Chart(document.getElementById('rcChart'),{
+  type:'bar',
+  data:{
+    labels:['0 rules','1 rule','2 rules','3 rules'],
+    datasets:[
+      {label:'Option 1',data:[430,757,665,28],backgroundColor:O1+'CC',borderRadius:3},
+      {label:'Option 4',data:[469,856,522,33],backgroundColor:O4+'CC',borderRadius:3}
+    ]
+  },
+  options:baseOpts
+});
+</script>
+</body>
+</html>
